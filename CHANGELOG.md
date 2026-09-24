@@ -52,6 +52,13 @@ kode), ketemu roda gigi SVG yang duduk 84 px di luar tepi kanan selama adegan te
 - **`references/techniques.md` §10** — baris jebakan baru untuk `transformOrigin` pada SVG.
 - **`SKILL.md` checklist** — dua butir: nol `transformOrigin` pada elemen SVG; nol elemen
   ilustrasi keluar panggung saat kamera diam.
+- **`scripts/piksel.mjs` — ALAT BARU.** Mengukur **piksel** di pita tepi frame yang
+  benar-benar digambar, per detik + skala kamera. Kenapa perlu padahal sudah ada
+  `tepi.mjs`: `tepi.mjs` mengukur **DOM**, dan DOM berbohong tentang apa yang mendarat
+  di layar (filter SVG melebar, `mix-blend-mode`, bayangan, `overflow`). Roda gigi
+  yang keluar frame pada 2026-09-25 **lolos** dari `tepi.mjs` versi lama dan hanya
+  ketemu setelah piksel dihitung. Viewport wajib seukuran panggung — dengan
+  viewport default 800×600, area letterbox terbaca sebagai 8000 "tinta" palsu per sisi.
 
 Aturan yang paling penting: **alat yang melaporkan "bersih" karena tidak menemukan
 apa pun lebih berbahaya daripada alat yang melaporkan masalah palsu.**
