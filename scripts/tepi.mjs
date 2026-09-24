@@ -20,11 +20,20 @@
      node <path>/tepi.mjs . --sel "#world .line,#world .name"
      URL="file:///C:/proyek/index.html?clean=1" node <path>/tepi.mjs .
 
+   CATATAN PENTING — SKALA KAMERA (bug yang membuat alat ini diperluas):
+   elemen yang keluar frame saat kamera CLOSE-UP itu NORMAL; yang salah adalah
+   elemen yang keluar frame saat kamera DIAM. Diukur 2026-09-24: satu roda gigi
+   SVG duduk 84 px di luar tepi kanan selama adegan terakhir (z=1), separuh keluar
+   frame, dan tidak ada alat yang menangkapnya karena teks-nya sendiri bersih.
+   Jadi sekarang alat ini juga memeriksa elemen ILUSTRASI, dan melaporkan skala
+   kamera tiap detik supaya "keluar frame" bisa dinilai dalam konteks.
+
    Opsi:
      --step N     jarak pembacaan detik (default 0.5)
      --margin N   margin aman dari tepi bawah, px (default 32 = 3% dari 1080;
                   ambang dari pengukuran, lihat SKILL.md checklist)
-     --sel SEL    selector elemen teks (default: kelas umum teks)
+     --sel SEL    selector elemen TEKS (default: kelas umum teks)
+     --all        juga periksa elemen ILUSTRASI (svg/g/canvas/img), bukan hanya teks
      --json FILE  tulis hasil mentah
 
    Keluaran: satu baris per pelanggaran, dan ringkasan elemen mana yang
@@ -55,6 +64,11 @@ const STEP = Number(arg('--step', 0.5));
 const MARGIN = Number(arg('--margin', 32));
 const JSONOUT = arg('--json', '');
 const SEL = arg('--sel', '#world .line,#world .name,#world .hand,#world .ghost,.line,.name,.hand,.ghost,.headline,.label,.big,.txt');
+const ALL = argv.includes('--all');
+/* Elemen ilustrasi: diperiksa HANYA dengan --all. Teks selalu diperiksa.
+   Pengecualian: lapisan latar seukuran DUNIA (biasanya bernama *paper*, *bg*,
+   *grain*, *surface*) memang lebih besar dari frame — itu bukan pelanggaran. */
+const SEL_ALL = SEL + ',#world svg,#world canvas,#world img,#world [id]';
 
 const { writeFile } = await import('node:fs/promises');
 const path = await import('node:path');
@@ -103,18 +117,32 @@ for (const t of times) {
     else { window.OPENER.seek(tt); await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))); window.OPENER.seek(tt); }
   }, t);
 
-  const r = await page.evaluate(({ sel, margin }) => {
+  const r = await page.evaluate(({ sel, margin, all }) => {
     const stage = document.querySelector('#stage') || document.body;
     const S = stage.getBoundingClientRect();
     const fit = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--fit')) || 1;
+    // Skala kamera: elemen di luar frame saat close-up itu normal, saat diam itu bug.
+    let camZ = null;
+    const w = document.querySelector('#world');
+    if (w) { const m = String(getComputedStyle(w).transform).match(/matrix\(([-\d.]+)/); camZ = m ? +Number(m[1]).toFixed(3) : null; }
     const out = [];
     for (const el of document.querySelectorAll(sel)) {
       const cs = getComputedStyle(el);
       if (cs.visibility === 'hidden' || cs.display === 'none') continue;
       const op = parseFloat(cs.opacity);
       if (op < 0.5) continue;
+      /* PERHATIAN: pada elemen SVG, `el.className` adalah SVGAnimatedString —
+         bukan string. `el.className.split()` melempar TypeError dan mematikan
+         seluruh pemeriksaan. Ambil lewat getAttribute. */
+      const cls = String(el.getAttribute('class') || '').toLowerCase();
       const txt = (el.textContent || '').trim();
-      if (!txt) continue;
+      const isText = txt.length > 0
+        && /^(line|name|hand|ghost|headline|label|big|unit|kicker|caption|txt|txt2|hl-t|b|h1|h2|h3)$/.test(cls.split(' ')[0] || '')
+        || (txt.length > 0 && /^(H1|H2|H3|P|SPAN)$/.test(el.tagName));
+      // Elemen non-teks hanya diperiksa dengan --all.
+      if (!txt && !all) continue;
+      // Lapisan latar seukuran DUNIA (paper/grain/surface/bg/layer) memang lebih besar — bukan pelanggaran.
+      if (!txt && /paper|grain|surface|(^|\s)bg(\s|$)|layer/.test(cls)) continue;
       const cp = cs.clipPath || 'none';
       if (/inset\([^)]*100%/.test(cp)) continue;
       const b = el.getBoundingClientRect();
@@ -130,17 +158,24 @@ for (const t of times) {
       const onStage = (x + w > 4) && (y + h > 4) && (x < S.width / fit - 4) && (y < S.height / fit - 4);
       if (!onStage) continue;
       out.push({
-        id: el.id || el.className.split(' ')[0], txt: txt.slice(0, 28),
+        id: el.id || cls.split(' ')[0] || el.tagName, txt: txt.slice(0, 28), isText,
         x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h),
         overR: Math.round(overR), overB: Math.round(overB),
         overL: Math.round(overL), overT: Math.round(overT),
         marginB: Math.round((S.height / fit) - (y + h)),
         worst: Math.round(worst),
-        safe: worst <= 2 && ((S.height / fit) - (y + h)) >= margin,
+        camZ,
+        /* "sah" = masih di dalam frame, ATAU keluar frame saat kamera BELUM home.
+           Ambang 1,05 dan bukan 1,5: z=1,25 itu kamera yang sedang zoom-out dari
+           close-up, bukan kamera diam. Ambang yang terlalu ketat membuat alat
+           melaporkan puluhan "kegagalan" palsu — dan alat yang terlalu banyak
+           protes akan diabaikan, persis penyakit yang alat ini ada untuk mencegah. */
+        safe: worst <= 2 ? ((S.height / fit) - (y + h)) >= margin || !isText
+                         : (camZ !== null && camZ > 1.05),
       });
     }
     return out;
-  }, { sel: SEL, margin: MARGIN });
+  }, { sel: ALL ? SEL_ALL : SEL, margin: MARGIN, all: ALL });
 
   rows.push({ t, els: r });
 }
@@ -148,14 +183,16 @@ for (const t of times) {
 /* Pelanggaran = keluar panggung (>2px). Margin tipis dilaporkan terpisah:
    teks yang masih di dalam tapi kurang dari `--margin` dari tepi bawah akan
    terasa mepet setelah di-encode dan ditonton di HP. */
-const violations = [];
+const violations = [];      // keluar panggung TANPA alasan (kamera diam) — kegagalan
+const violationsCloseup = []; // keluar panggung saat close-up — informasi, bukan kegagalan
 const tight = [];
 for (const row of rows) {
   for (const e of row.els) {
-    const out = e.worst > 2;
     const rec = { t: row.t, ...e };
-    if (out) violations.push(rec);
-    else if (e.marginB < MARGIN) tight.push(rec);
+    if (e.worst > 2) {
+      if (e.camZ !== null && e.camZ > 1.05) violationsCloseup.push(rec);
+      else violations.push(rec);
+    } else if (e.isText && e.marginB < MARGIN) tight.push(rec);
   }
 }
 
@@ -168,9 +205,9 @@ const fmt = (e) => {
   return sides.join(' ');
 };
 
-console.log('=== TEKS YANG KELUAR PANGGUNG ===');
+console.log('=== KELUAR PANGGUNG SAAT KAMERA DIAM (kegagalan) ===');
 if (!violations.length) {
-  console.log('  (bersih — semua elemen teks berada di dalam panggung sepanjang durasi)');
+  console.log('  (bersih — tidak ada elemen di luar panggung saat kamera tidak close-up)');
 } else {
   for (const v of violations) {
     console.log(`  ${String(v.t).padStart(5)}s  ${String(v.id).padEnd(12)} "${v.txt}"  ${fmt(v)}   [x=${v.x} y=${v.y} w=${v.w} h=${v.h}]`);
@@ -178,6 +215,21 @@ if (!violations.length) {
   console.log('');
   console.log('  perbaikan: geser blok teks naik, atau kurangi simpangan pintu masuk');
   console.log('             (yPercent/y positif masuk dari bawah memakan margin).');
+}
+
+if (violationsCloseup.length) {
+  console.log('');
+  console.log('=== KELUAR PANGGUNG SAAT CLOSE-UP (informasi — ini sah) ===');
+  const byId = new Map();
+  for (const e of violationsCloseup) {
+    const s = byId.get(e.id) || { id: e.id, txt: e.txt, max: 0, first: e.t, last: e.t, minZ: 9 };
+    s.max = Math.max(s.max, e.worst); s.last = e.t; s.minZ = Math.min(s.minZ, e.camZ || 9);
+    byId.set(e.id, s);
+  }
+  for (const s of byId.values()) {
+    console.log(`  ${String(s.id).padEnd(14)} "${s.txt}"  maks +${s.max}px  kamera z>=${s.minZ}  (${s.first}s..${s.last}s)`);
+  }
+  console.log('  -> shot close-up memang memotong tepi. Bukan bug — tapi pastikan disengaja.');
 }
 
 if (tight.length) {

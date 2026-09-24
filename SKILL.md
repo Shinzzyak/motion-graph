@@ -371,8 +371,14 @@ bagian 1 dan 1b. Ringkasnya:
    ```bash
    node <skill>/scripts/perdetik.mjs . --step 1        # tumpang tindih + kesinambungan
    node <skill>/scripts/tepi.mjs . --step 0.5          # teks vs TEPI panggung
+   node <skill>/scripts/tepi.mjs . --step 0.5 --all    # + ILUSTRASI (svg/g/canvas/[id])
    node <skill>/scripts/lacak.mjs . "#divider" --box   # satu elemen, properti per detik
    ```
+
+   **`--all` wajib bila ada ilustrasi SVG yang berputar.** Alat ini membedakan
+   "keluar panggung saat kamera DIAM" (kegagalan) dari "keluar panggung saat
+   close-up" (sah) — karena shot close-up memang memotong tepi, dan tanpa pembedaan
+   itu laporannya penuh positif palsu yang membuat alatnya diabaikan.
 
    Tiga kelas yang dijaga alat-alat itu: teks adegan BERBEDA yang saling menimpa;
    teks yang keluar tepi panggung **di puncak animasi masuknya** (bukan di posisi
