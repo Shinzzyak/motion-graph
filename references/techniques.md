@@ -11,6 +11,8 @@ bukan hukum. Font, warna, dan konten selalu milik brand user.
 3b. Ukuran shot: kamera ke elemen (wide ↔ medium close-up ↔ close-up)
 4. Kamera: pan 3D menyusur kalimat per kata
 4b. Transisi antar adegan — hierarki yang benar
+4c. Menu transisi — bukan balok persegi yang menyapu
+4d. Biaya render — ukuran DUNIA, bukan jumlah elemen
 5. Light leak transisi
 6. Glow yang benar (dan kapan tidak)
 7. Latar Three.js: nebula, debu, grid, ornamen 3D, bloom
@@ -333,6 +335,45 @@ kalimat, zoom ke potongan UI, meredup lalu berganti, hapus-ketik) ada di `opener
 dibawa benda". Medan warna palet yang MENJADI latar babak berikutnya — logo tetap di
 tempat dan berbalik warna di garis medan — bukan balok dekoratif yang lewat: boleh,
 paling banyak dua kali per video.
+
+## 4d. Biaya render — ukuran DUNIA, bukan jumlah elemen
+
+Diukur 2026-09-24 pada explainer sketsa vintage 48 dtk. Angkanya dari black box
+(Edge headless, `file://`, screenshot per frame):
+
+| Gaya latar | Frame | Waktu | dtk/frame |
+|---|---|---|---|
+| diam-bertekstur, dunia ≈ 1× frame | 1020 | 362 dtk | **0,355** |
+| gradien berpindah, dunia ≈ 1× frame | 900 | 346 dtk | **0,384** |
+| aliran horizontal 2 lapis | 1080 | 505 dtk | **0,468** |
+| grid bernapas + blob | 1230 | 793 dtk | **0,645** |
+| **kamera menyusuri dunia 7,3× lebar frame** | 1440 | **1481 dtk** | **1,028** |
+
+Penyebabnya **bukan jumlah elemen** (proyek terakhir punya 284 elemen, 194 path —
+biasa). Penyebabnya **lapisan latar yang diukur dalam ukuran DUNIA, bukan frame**:
+
+```css
+/* 14000 x 4000 px = 56 megapiksel PER LAPISAN, tiga lapisan */
+.paper-bot   { inset:-1600px; width:14000px; height:4000px; will-change:transform }
+.paper-top   { inset:-1600px; width:14000px; height:4000px; will-change:transform }
+.grain-layer { inset:-200px;  width:14000px; height:4000px; mix-blend-mode:multiply }
+```
+
+- `mix-blend-mode` memaksa compositing ulang setiap frame — paling mahal.
+- `will-change: transform` pada lapisan sebesar itu **menaikkan** biaya: tiap lapisan
+  dipromosikan ke layer GPU sendiri berukuran 56 MP.
+
+**Aturan:**
+1. Dunia boleh besar; **lapisan latar yang ber-blend-mode atau ber-filter harus
+   seukuran frame** (dipasang di luar rig kamera, bukan di dalam `#world`).
+2. Batasi dunia pada batas yang benar-benar dikunjungi kamera, bukan "lebar sekali
+   supaya aman". Dunia 7× frame = 7× biaya compositing.
+3. Perkirakan sebelum render: `menit ≈ durasi × fps × dtk_per_frame / 60`. Pilih
+   `dtk_per_frame` dari tabel di atas sesuai **luas dunia**, bukan jumlah elemen.
+   Contoh: 48 dtk @30 fps di dunia 7× = `48 × 30 × 1,028 / 60` = **24,7 menit**.
+
+Kamera yang benar-benar menyusuri dunia (kolase, peta) tetap sah — yang dilarang
+cuma membayar luasnya berulang-ulang di lapisan yang tidak perlu sebesar itu.
 
 ## 5. Light leak transisi
 

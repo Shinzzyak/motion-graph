@@ -28,7 +28,13 @@ berbohong**:
 - `references/verifikasi-per-detik.md` — tiga aturan baru: #4b ukur tepi di puncak
   animasi; #6 proyek tanpa `.scene`; #7 irisan panggung.
 - `SKILL.md` — langkah 4b memuat ketiga alat; checklist dapat butir tepi; tabel Isi
-  paket memuat `tepi.mjs`.
+  paket memuat `tepi.mjs`; langkah 6 mewajibkan **perkiraan biaya render disebut ke
+  user SEBELUM mulai**.
+- `references/techniques.md` §4d — **biaya render**: tabel `dtk_per_frame` terukur
+  per gaya latar, dan temuan bahwa yang menentukan bukan jumlah elemen melainkan
+  **luas DUNIA**. Dunia 7,3× lebar frame = 1,028 dtk/frame (2,9× lebih lambat dari
+  proyek sebelumnya); penyebabnya tiga lapisan latar 56 MP dengan
+  `mix-blend-mode` + `will-change`, bukan 284 elemennya.
 
 Aturan yang paling penting: **alat yang melaporkan "bersih" karena tidak menemukan
 apa pun lebih berbahaya daripada alat yang melaporkan masalah palsu.**

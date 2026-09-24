@@ -405,6 +405,13 @@ bagian 1 dan 1b. Ringkasnya:
    menggabungkannya — cara ini bebas frame drop, tapi mahal, jadi bukan
    langkah rutin dan bukan alat pengecekan.
 
+   **Perkirakan biayanya SEBELUM mulai, dan sebutkan angkanya ke user.**
+   `menit ≈ durasi × fps × dtk_per_frame / 60`. Tabel `dtk_per_frame` per gaya
+   latar ada di `references/techniques.md` §4d — dan yang menentukan bukan jumlah
+   elemen, tapi **luas DUNIA**: dunia 7× lebar frame terukur **1,028 dtk/frame**
+   (48 dtk @30 fps = 24,7 menit), sementara dunia ≈1× frame cuma 0,355. Jangan
+   biarkan user menunggu 25 menit tanpa diberi tahu lebih dulu.
+
 7. **Terima jadi.** Sebelum menyerahkan, tulis batas apa adanya (`references/config-dan-terima.md` §2b): yang belum diverifikasi, yang aproksimatif, batas input, dua keluaran berbeda, dan biaya yang memakai kuota user. Kalau ada yang gagal, tulis gagal — jangan substitusi hasil lain diam-diam. Untuk proyek yang akan direvisi, sertakan brief revisi berbentuk perintah (§2a).
 
 8. **Khusus explainer: naskah VO + ajakan merekam** — pesan penutup wajib
