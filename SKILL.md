@@ -504,6 +504,13 @@ bagian 1 dan 1b. Ringkasnya:
 - [ ] Tidak ada `fromTo`/`from` di detik > 0 yang menyentuh properti yang sudah
       di-`set` sebelumnya tanpa `immediateRender:false` (diverifikasi lewat
       `lacak.mjs`, bukan dengan membaca kode)
+- [ ] **Nol `transformOrigin` pada elemen SVG** — pakai `svgOrigin:'x y'` (koordinat
+      ruang user). `transformOrigin` dibaca relatif bbox elemen dan melempar elemen
+      keluar frame saat berputar. Cek mekanis:
+      `grep -c "transformOrigin" index.html` harus 0 untuk elemen SVG
+- [ ] Tidak ada elemen ilustrasi keluar panggung **saat kamera diam (z≈1)** — saat
+      close-up (z>1,5) keluar frame itu sah; saat kamera diam, elemen di luar tepi
+      adalah bug yang tidak terlihat di frame mana pun
 - [ ] Ada suara? Halaman menahan di frame awal bila autoplay diblokir dan mulai
       bersama suara pada gestur pertama — tidak pernah mulai tanpa suara; tanpa
       file peluncur (`.cmd`/`.bat`)
