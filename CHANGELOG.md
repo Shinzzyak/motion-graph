@@ -36,8 +36,28 @@ berbohong**:
   proyek sebelumnya); penyebabnya tiga lapisan latar 56 MP dengan
   `mix-blend-mode` + `will-change`, bukan 284 elemennya.
 
+### Tambahan sesi yang sama — jebakan yang ditemukan SETELAH video dikirim
+
+Waktu memverifikasi **artefak yang sudah dikirim** (frame diekstrak dari MP4, bukan dari
+kode), ketemu roda gigi SVG yang duduk 84 px di luar tepi kanan selama adegan terakhir.
+
+- **`transformOrigin` pada elemen SVG dibaca relatif BBOX elemen, bukan ruang user SVG.**
+  Untuk `<circle cx=600 cy=400 r=60>` (bbox `540,340`), pivot jadi `(1140,740)`, dan
+  `rotate(180)` menggeser elemen **907×571 px**. Pakai **`svgOrigin:'600 400'`**.
+  Jebakan ini **tidak terlihat di frame mana pun** karena saat close-up (z>1,5) keluar
+  frame itu normal — yang salah cuma saat kamera diam.
+- **`scripts/tepi.mjs` diperluas: `--all`** — memeriksa elemen ILUSTRASI (svg/g/canvas/img/[id]),
+  bukan hanya teks, dan **membedakan keluar panggung saat kamera DIAM (kegagalan) dari
+  saat CLOSE-UP (sah)**. Ambang `camZ > 1,05` — 1,5 bikin 17 positif palsu.
+- **`references/techniques.md` §10** — baris jebakan baru untuk `transformOrigin` pada SVG.
+- **`SKILL.md` checklist** — dua butir: nol `transformOrigin` pada elemen SVG; nol elemen
+  ilustrasi keluar panggung saat kamera diam.
+
 Aturan yang paling penting: **alat yang melaporkan "bersih" karena tidak menemukan
 apa pun lebih berbahaya daripada alat yang melaporkan masalah palsu.**
+
+Aturan kedua: **verifikasi akhir harus dijalankan pada ARTEFAK yang dikirim** — ekstrak
+frame dari MP4. Alat yang hanya memeriksa teks tidak membuktikan ilustrasinya benar.
 
 ## 1.20.0 — 2026-09-24
 
