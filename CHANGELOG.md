@@ -13,13 +13,18 @@ berbohong**:
   bawah 13–54 px selama 1–1,5 dtk — di **puncak animasi masuknya**, bukan di posisi
   istirahatnya. `perdetik.mjs` tidak akan pernah menemukannya: ia membandingkan
   teks dengan teks, bukan teks dengan tepi.
-- `scripts/perdetik.mjs` — **dua perbaikan**:
+- `scripts/perdetik.mjs` — **tiga perbaikan**:
   - proyek **tanpa `.scene`** (kamera menyusuri dunia besar) diperlakukan sebagai
     satu adegan; sebelumnya alat melaporkan `0 teks` di semua pembacaan dan
     "bersih" — **hijau karena buta**, bukan karena kode bersih.
   - **"terlihat" = opacity cukup DAN irisannya dengan panggung.** Di gaya kolase,
     teks yang tidak pernah dimatikan tidak menumpuk di layar — ia keluar frame
     karena kameranya pergi.
+  - **label adegan saat `.scene` tidak ada** memakai id/kelas elemennya sendiri
+    (`#line1`, `#line2`, …). Sebelumnya semua teks berlabel `world`, jadi keluaran
+    tidak bisa membedakan teks mana yang bermasalah — laporan yang benar tapi tidak
+    berguna. Diverifikasi di dua jalur: fallback (label jadi `#lineN`) dan
+    non-fallback (label tetap id adegan).
 - `references/verifikasi-per-detik.md` — tiga aturan baru: #4b ukur tepi di puncak
   animasi; #6 proyek tanpa `.scene`; #7 irisan panggung.
 - `SKILL.md` — langkah 4b memuat ketiga alat; checklist dapat butir tepi; tabel Isi

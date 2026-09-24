@@ -159,10 +159,23 @@ for (const t of times) {
        tidak dihitung tabrakan), tapi teks yang saling menimpa tetap tertangkap.
        Tanpa cabang ini, detector buta persis di pola yang paling sering
        dipakai model: elemen di-tween langsung tanpa pembungkus adegan. */
+    let sceneFallback = false;
     if (!allScenes.length) {
       const w = document.querySelector('#world') || document.querySelector('#stage') || document.body;
-      if (w) { if (!w.id) w.id = '__world__'; allScenes = [w]; }
+      if (w) { allScenes = [w]; sceneFallback = true; }
     }
+    /* Label adegan untuk satu elemen. Kalau proyeknya tidak punya `.scene`,
+       semua teks akan berlabel "world" — keluaran jadi tidak bisa membedakan
+       teks mana yang bermasalah. Jadi: pakai id/kelas elemennya sendiri.
+       Nama kelas pertama saja, supaya kolomnya tetap terbaca. */
+    const sceneLabel = (sc, el) => {
+      if (!sceneFallback) return sc.id || '(tanpa-id)';
+      if (el && (el.id || el.className)) {
+        const c = String(el.className || '').trim().split(/\s+/)[0];
+        return el.id ? `#${el.id}` : `.${c}`;
+      }
+      return sc.id || '(tanpa-id)';
+    };
     for (const sc of allScenes) {
       const sceneOp = parseFloat(getComputedStyle(sc).opacity);
       const sceneGone = sceneOp < 0.05;
@@ -190,7 +203,7 @@ for (const t of times) {
         const onStage = (R.x + R.w > 4) && (R.y + R.h > 4) && (R.x < SW - 4) && (R.y < SH - 4);
         if (!onStage) continue;
         const ownOp = parseFloat(cs.opacity);
-        vis.push({ el, txt: txt.slice(0, 26), scene: sc.id || '(tanpa-id)', sceneGone,
+        vis.push({ el, txt: txt.slice(0, 26), scene: sceneLabel(sc, el), sceneGone,
                    ownOp: +ownOp.toFixed(2), eff: +eff.toFixed(2), ...R });
       }
     }
@@ -241,7 +254,7 @@ for (const t of times) {
         if (cs.visibility === 'hidden' || cs.display === 'none') continue;
         const txt = (el.textContent || '').trim();
         if (!txt) continue;
-        own.push({ txt: txt.slice(0, 26), scene: sc.id || '(tanpa-id)',
+        own.push({ txt: txt.slice(0, 26), scene: sceneLabel(sc, el),
                    ownOp: +parseFloat(cs.opacity).toFixed(2), sceneOp: +parseFloat(getComputedStyle(sc).opacity).toFixed(2) });
       }
     }
