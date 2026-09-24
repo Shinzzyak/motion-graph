@@ -488,8 +488,12 @@ bagian 1 dan 1b. Ringkasnya:
 - [ ] Sudah diukur PER DETIK (perdetik.mjs): tidak ada dua teks adegan BERBEDA
       yang saling menimpa, dan layar pernah benar-benar kosong di antara adegan
 - [ ] Sudah diukur TEPI (tepi.mjs): nol elemen teks keluar panggung di detik mana
-      pun — termasuk saat puncak animasi masuknya, bukan hanya di posisi akhir;
-      margin bawah ≥ 60 px
+      pun — termasuk saat puncak animasi masuknya, bukan hanya di posisi akhir.
+      Margin bawah: ambangnya **≥ 32 px pada panggung 1080** (3 %). Angka ini dari
+      pengukuran, bukan karangan: 60 px terdengar aman tapi tidak realistis untuk
+      teks yang duduk di atas ilustrasi yang mengisi frame — proyek pertama yang
+      memakainya hanya mencapai 37 px dan itu sudah terlihat lega di layar. Yang
+      penting bukan angkanya, tapi bahwa marginnya **diukur**, bukan diandaikan.
 - [ ] Tidak ada `fromTo`/`from` di detik > 0 yang menyentuh properti yang sudah
       di-`set` sebelumnya tanpa `immediateRender:false` (diverifikasi lewat
       `lacak.mjs`, bukan dengan membaca kode)

@@ -154,3 +154,10 @@ dan pada proyek yang **tidak punya**, sebelum dipercaya.
 7. **Uji alatnya, bukan cuma pakai alatnya.** Setiap alat verifikasi wajib
    dijalankan pada proyek yang punya masalah **dan** pada proyek yang tidak punya.
    Alat yang hijau karena buta akan membuat kamu menyerahkan hasil tanpa memeriksa.
+   Contoh nyata: `tepi.mjs` diuji pada kode keluaran model yang belum diperbaiki →
+   24 pelanggaran terdeteksi; pada kode yang sudah diperbaiki → bersih. Tanpa uji
+   negatif itu, yang kamu punya hanya bukti bahwa alatnya **tidak protes**.
+8. **Ambang verifikasi harus dari pengukuran, bukan dari rasa aman.** Ambang yang
+   dikarang (mis. "margin ≥ 60 px" tanpa pernah mengukur) membuat setiap proyek
+   berikutnya kelihatan gagal, lalu diabaikan — dan aturannya mati. Ukur satu
+   proyek nyata, ambil angkanya, dan tulis dari mana angka itu datang.

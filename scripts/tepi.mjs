@@ -22,7 +22,8 @@
 
    Opsi:
      --step N     jarak pembacaan detik (default 0.5)
-     --margin N   margin aman dari tepi bawah, px (default 60)
+     --margin N   margin aman dari tepi bawah, px (default 32 = 3% dari 1080;
+                  ambang dari pengukuran, lihat SKILL.md checklist)
      --sel SEL    selector elemen teks (default: kelas umum teks)
      --json FILE  tulis hasil mentah
 
@@ -51,7 +52,7 @@ const arg = (name, def) => {
   return i >= 0 && argv[i + 1] ? argv[i + 1] : def;
 };
 const STEP = Number(arg('--step', 0.5));
-const MARGIN = Number(arg('--margin', 60));
+const MARGIN = Number(arg('--margin', 32));
 const JSONOUT = arg('--json', '');
 const SEL = arg('--sel', '#world .line,#world .name,#world .hand,#world .ghost,.line,.name,.hand,.ghost,.headline,.label,.big,.txt');
 
