@@ -110,7 +110,12 @@ def main() -> int:
         rel = str(p.relative_to(root))
 
         # filenames
+        # Pengecualian: pemindai ini sendiri bernama `scan_secrets.py`, jadi ia
+        # selalu mencocokkan pola "secret". Positif palsu yang sama kelasnya
+        # dengan `127.0.0.1` di skrip dev — alat yang menuduh dirinya sendiri.
         low = p.name.lower()
+        if low == "scan_secrets.py":
+            continue
         for n in NAMES:
             if n in low:
                 findings.append((rel, 0, "NAMA BERKAS sensitif", p.name))
