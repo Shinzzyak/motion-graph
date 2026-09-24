@@ -372,8 +372,15 @@ bagian 1 dan 1b. Ringkasnya:
    node <skill>/scripts/perdetik.mjs . --step 1        # tumpang tindih + kesinambungan
    node <skill>/scripts/tepi.mjs . --step 0.5          # teks vs TEPI panggung
    node <skill>/scripts/tepi.mjs . --step 0.5 --all    # + ILUSTRASI (svg/g/canvas/[id])
+   node <skill>/scripts/piksel.mjs . --step 2          # TINTA menyentuh tepi (piksel)
    node <skill>/scripts/lacak.mjs . "#divider" --box   # satu elemen, properti per detik
    ```
+
+   **`tepi.mjs` mengukur DOM, `piksel.mjs` mengukur yang benar-benar DIGAMBAR.**
+   Keduanya perlu: `tepi.mjs` tahu elemen mana yang salah, `piksel.mjs` menangkap
+   apa yang hanya muncul saat halaman dirender (filter SVG melebar, `mix-blend-mode`,
+   bayangan, `overflow`). Diukur 2026-09-25: roda gigi SVG yang keluar frame **lolos
+   dari `tepi.mjs` versi lama**, dan hanya ketemu setelah piksel MP4 dihitung.
 
    **`--all` wajib bila ada ilustrasi SVG yang berputar.** Alat ini membedakan
    "keluar panggung saat kamera DIAM" (kegagalan) dari "keluar panggung saat
@@ -516,7 +523,10 @@ bagian 1 dan 1b. Ringkasnya:
       `grep -c "transformOrigin" index.html` harus 0 untuk elemen SVG
 - [ ] Tidak ada elemen ilustrasi keluar panggung **saat kamera diam (z≈1)** — saat
       close-up (z>1,5) keluar frame itu sah; saat kamera diam, elemen di luar tepi
-      adalah bug yang tidak terlihat di frame mana pun
+      adalah bug yang tidak terlihat di frame mana pun (`tepi.mjs --all`)
+- [ ] **Sudah diukur PIKSEL** (`piksel.mjs`): nol tinta di pita tepi saat kamera
+      diam. Ini pemeriksaan terakhir dan yang paling keras — ia mengukur yang
+      benar-benar digambar, bukan yang dijanjikan DOM
 - [ ] Ada suara? Halaman menahan di frame awal bila autoplay diblokir dan mulai
       bersama suara pada gestur pertama — tidak pernah mulai tanpa suara; tanpa
       file peluncur (`.cmd`/`.bat`)
@@ -612,6 +622,7 @@ dan buat layer dari belakang ke depan. Build 10 panggung ≈ 1 jam, 0 kredit.
 | `scripts/snap.mjs` | VERIFIKASI VISUAL: potret detik kunci → lembar kontak (opsional, butuh Node + puppeteer) |
 | `scripts/perdetik.mjs` | VERIFIKASI PER DETIK (wajib sebelum serah): tumpang tindih teks lintas adegan, pola penataan, kesinambungan layar, durasi hidup tiap teks, skala kamera. Menangkap bug yang tidak punya jejak di frame |
 | `scripts/lacak.mjs` | VERIFIKASI PER DETIK: satu elemen dilacak properti-per-properti tiap detik — menemukan `fromTo` yang menimpa `gsap.set` sebelumnya |
-| `scripts/tepi.mjs` | VERIFIKASI TEPI: tiap elemen teks vs tepi panggung per detik — menemukan teks yang terpotong tepi di puncak animasi masuknya (tidak terlihat dari posisi akhir, tidak tertangkap oleh pemeriksa tumpang tindih) |
+| `scripts/tepi.mjs` | VERIFIKASI TEPI (DOM): tiap elemen vs tepi panggung per detik — teks, dan dengan `--all` juga ilustrasi. Membedakan keluar panggung saat kamera DIAM (kegagalan) dari saat CLOSE-UP (sah) |
+| `scripts/piksel.mjs` | VERIFIKASI PIKSEL: hitung tinta di pita tepi frame yang benar-benar digambar, per detik + skala kamera. Menangkap yang tidak terlihat di DOM — filter SVG melebar, blend mode, bayangan. Ini yang menemukan roda gigi SVG yang keluar frame setelah `tepi.mjs` melaporkan bersih |
 | `scripts/vo-pauses.html` | deteksi jeda VO di browser (pengganti ffmpeg silencedetect, tanpa instal) |
 | `scripts/export-frames.mjs` | EXPORT: render semua frame → MP4, hanya bila diminta (opsional, butuh Node + puppeteer + ffmpeg) |
