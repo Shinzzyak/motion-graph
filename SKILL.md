@@ -5,14 +5,14 @@ license: MIT
 metadata:
   author: Bang Tutorial
   author_url: https://youtube.com/bangtutorial
-  version: "1.20.0"
-  updated: "2026-09-24"
+  version: "1.21.0"
+  updated: "2026-09-25"
   homepage: https://github.com/bangtutorial/bang-motion
 ---
 
 # Bang Motion — motion graphic web yang bukan PPT
 
-**v1.20.0 · by [Bang Tutorial](https://youtube.com/bangtutorial) · MIT.** Riwayat perubahan di `CHANGELOG.md`;
+**v1.21.0 · by [Bang Tutorial](https://youtube.com/bangtutorial) · MIT.** Riwayat perubahan di `CHANGELOG.md`;
 cara pasang di `README.md`.
 
 Skill ini untuk AI coding agent apa pun (format Agent Skills terbuka).
@@ -370,8 +370,14 @@ bagian 1 dan 1b. Ringkasnya:
 
    ```bash
    node <skill>/scripts/perdetik.mjs . --step 1        # tumpang tindih + kesinambungan
+   node <skill>/scripts/tepi.mjs . --step 0.5          # teks vs TEPI panggung
    node <skill>/scripts/lacak.mjs . "#divider" --box   # satu elemen, properti per detik
    ```
+
+   Tiga kelas yang dijaga alat-alat itu: teks adegan BERBEDA yang saling menimpa;
+   teks yang keluar tepi panggung **di puncak animasi masuknya** (bukan di posisi
+   istirahatnya — ukur tiap detik, bukan sekali); properti yang kamu `set` tapi
+   tidak pernah muncul di keluaran (tanda `fromTo` menimpanya).
 
    Yang dicari: dua teks adegan BERBEDA yang saling menimpa; layar yang tidak
    pernah kosong di antara adegan; properti yang kamu `set` tapi tidak pernah
@@ -481,6 +487,9 @@ bagian 1 dan 1b. Ringkasnya:
       mata — bukan render penuh; MP4 hanya bila diminta
 - [ ] Sudah diukur PER DETIK (perdetik.mjs): tidak ada dua teks adegan BERBEDA
       yang saling menimpa, dan layar pernah benar-benar kosong di antara adegan
+- [ ] Sudah diukur TEPI (tepi.mjs): nol elemen teks keluar panggung di detik mana
+      pun — termasuk saat puncak animasi masuknya, bukan hanya di posisi akhir;
+      margin bawah ≥ 60 px
 - [ ] Tidak ada `fromTo`/`from` di detik > 0 yang menyentuh properti yang sudah
       di-`set` sebelumnya tanpa `immediateRender:false` (diverifikasi lewat
       `lacak.mjs`, bukan dengan membaca kode)
@@ -579,5 +588,6 @@ dan buat layer dari belakang ke depan. Build 10 panggung ≈ 1 jam, 0 kredit.
 | `scripts/snap.mjs` | VERIFIKASI VISUAL: potret detik kunci → lembar kontak (opsional, butuh Node + puppeteer) |
 | `scripts/perdetik.mjs` | VERIFIKASI PER DETIK (wajib sebelum serah): tumpang tindih teks lintas adegan, pola penataan, kesinambungan layar, durasi hidup tiap teks, skala kamera. Menangkap bug yang tidak punya jejak di frame |
 | `scripts/lacak.mjs` | VERIFIKASI PER DETIK: satu elemen dilacak properti-per-properti tiap detik — menemukan `fromTo` yang menimpa `gsap.set` sebelumnya |
+| `scripts/tepi.mjs` | VERIFIKASI TEPI: tiap elemen teks vs tepi panggung per detik — menemukan teks yang terpotong tepi di puncak animasi masuknya (tidak terlihat dari posisi akhir, tidak tertangkap oleh pemeriksa tumpang tindih) |
 | `scripts/vo-pauses.html` | deteksi jeda VO di browser (pengganti ffmpeg silencedetect, tanpa instal) |
 | `scripts/export-frames.mjs` | EXPORT: render semua frame → MP4, hanya bila diminta (opsional, butuh Node + puppeteer + ffmpeg) |

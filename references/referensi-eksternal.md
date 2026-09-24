@@ -94,6 +94,8 @@ minta pipeline berbasis React.
 
 ## 4. Proyek sendiri — verifikasi per detik (2026-09-24, v1.20.0)
 
+> Lanjutan: **verifikasi TEPI** (2026-09-25, v1.21.0) — lihat §5 di bawah.
+
 Bukan dari repo luar: lahir dari satu proyek nyata (promo Continuum, 30 dtk) yang
 menghasilkan **empat bug, tiga di antaranya mustahil ditemukan dengan melihat
 frame**. Yang masuk ke skill:
@@ -113,7 +115,28 @@ skill — jadi agent berikutnya akan menabrak bug yang sama. Sekarang sudah di
 tidak ada. Kalau sebuah pengukuran menemukan bug, **naikkan alatnya ke skill di
 sesi yang sama** — jangan tinggalkan di proyek.
 
-## Aturan yang lahir dari ketiga sumber
+## 5. Proyek sendiri — verifikasi TEPI (2026-09-25, v1.21.0)
+
+Proyek nyata kedua (explainer sketsa vintage 48 dtk, kode dari
+`ag/claude-opus-4-6-thinking`). Yang masuk ke skill:
+
+| Alat/aturan | Menemukan |
+|---|---|
+| `scripts/tepi.mjs` (baru) | enam blok teks terpotong tepi bawah 13–54 px di **puncak animasi masuknya** — tidak terlihat dari posisi akhir, tidak tertangkap pemeriksa tumpang tindih |
+| `perdetik.mjs` — fallback tanpa `.scene` | alat melaporkan `0 teks` di SEMUA pembacaan dan "bersih" karena proyeknya tidak punya `.scene` sama sekali |
+| `perdetik.mjs` — irisan panggung | di gaya kolase, teks yang tidak dimatikan keluar frame, tidak menumpuk; tanpa cek irisan, laporannya salah di dua arah |
+| `references/verifikasi-per-detik.md` §4b/§6/§7 | tiga aturan baru |
+
+**Pelajaran yang lebih keras daripada sesi pertama:** bukan kode yang diukur yang
+bermasalah — **alat ukurnya sendiri berbohong dalam tiga cara berbeda**. Alat yang
+melaporkan "bersih" karena tidak menemukan apa pun lebih berbahaya daripada alat
+yang melaporkan masalah palsu: yang pertama membuat kamu menyerahkan hasil tanpa
+memeriksa.
+
+**Aturan:** setiap alat verifikasi wajib diuji pada proyek yang **punya** masalah
+dan pada proyek yang **tidak punya**, sebelum dipercaya.
+
+## Aturan yang lahir dari keempat sumber
 
 1. **Kerangka dulu, kulit kemudian.** Pilih konsep dari menu 19 SEBELUM menulis
    rundown; tulis sidik jari strukturnya. Kulit (palet/font) tidak menyelamatkan
@@ -128,3 +151,6 @@ sesi yang sama** — jangan tinggalkan di proyek.
    kalimat selalu dari brand user.
 6. **Alat yang menemukan bug naik ke skill di sesi yang sama.** Alat verifikasi
    yang tertinggal di folder satu proyek akan hilang bersama proyeknya.
+7. **Uji alatnya, bukan cuma pakai alatnya.** Setiap alat verifikasi wajib
+   dijalankan pada proyek yang punya masalah **dan** pada proyek yang tidak punya.
+   Alat yang hijau karena buta akan membuat kamu menyerahkan hasil tanpa memeriksa.

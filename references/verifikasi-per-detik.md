@@ -96,12 +96,71 @@ checker.
 dan perluas daftarnya setiap kali ada gaya penamaan baru. Jangan pernah mengunci
 ke kelas satu proyek.
 
+### 4b. Teks keluar frame di PUNCAK animasinya, bukan di posisi istirahatnya
+
+Diukur 2026-09-24, proyek sketsa vintage yang sama. Enam blok teks diletakkan di
+`top: 960–1070 px` pada panggung 1080 px. Di posisi istirahat semuanya masuk.
+Tapi pintu masuk teks memakai `yPercent: 60` **dan** kamera masih bergerak turun —
+di detik 6–7,5 blok kalimat pertama melaporkan `overB +54 px`: **ekornya terpotong
+tepi bawah** selama ±1,5 detik, tepat saat penonton membacanya.
+
+`perdetik.mjs` tidak menangkap ini karena ia mengukur tumpang tindih **antar teks**,
+bukan teks vs tepi panggung. Yang menemukannya: probe yang membandingkan
+`getBoundingClientRect()` tiap elemen teks dengan tepi `#stage` **di setiap detik**,
+bukan sekali.
+
+**Aturan:** ukur tepi, bukan hanya tumpang tindih. Untuk setiap elemen teks, di
+setiap detik ia terlihat, pastikan:
+
+```
+rect.right <= stage.right + 2   dan   rect.bottom <= stage.bottom + 2
+```
+
+Sisakan margin ≥ 60 px dari tepi bawah. Kalau pintu masuknya `yPercent` atau
+`y` positif (masuk dari bawah), margin itu harus dihitung dari **puncak
+simpangan**, bukan dari posisi akhir.
+
 ### 5. Elemen di luar `#dom` tidak akan ditemukan kalau pencarian dibatasi `#dom`
 
 Divider pada proyek itu ada di luar `#dom`. Pencarian yang dibatasi ke `#dom`
 tidak menemukannya sama sekali dan laporan berbunyi "TIDAK ADA" — padahal ada.
 
 **Aturan:** cari dari `#stage`, bukan dari `#dom`.
+
+### 6. Proyek TANPA `.scene` membuat detector melaporkan "0 teks / bersih"
+
+Diukur 2026-09-24 pada explainer sketsa vintage 48 dtk (kode dari
+`ag/claude-opus-4-6-thinking`). Alat melaporkan **`0 teks` di SEMUA 47 pembacaan**
+dan "bersih — tidak ada tumpang tindih" — padahal halaman itu punya enam kalimat
+yang jelas terlihat. Penyebabnya: detector lama **hanya** menelusuri
+`document.querySelectorAll('.scene')`, dan proyek ini tidak punya satu pun
+`.scene` (kamera yang menyusuri dunia kertas, elemen di-tween langsung).
+
+**Alat yang melaporkan "bersih" karena tidak menemukan apa pun lebih berbahaya
+daripada alat yang melaporkan masalah palsu** — yang pertama membuat kamu
+menyerahkan hasil tanpa memeriksa.
+
+**Aturan:** kalau `.scene` tidak ada, seluruh `#world` diperlakukan sebagai satu
+adegan. Penjaga induk-anak tetap berlaku; teks yang saling menimpa tetap tertangkap.
+
+### 7. "Terlihat" = opacity cukup **DAN** irisannya dengan panggung
+
+Kelas bug yang sama tapi kebalikannya. Di proyek "dunia besar + kamera menyusuri",
+teks yang tidak pernah dimatikan **tidak menumpuk di layar** — ia keluar frame
+karena kameranya pergi. Tanpa cek irisan:
+
+- layar dilaporkan "tidak pernah kosong" untuk layar yang sebenarnya kosong;
+- teks di luar frame dihitung sebagai tumpang tindih (positif palsu).
+
+```js
+const onStage = (R.x + R.w > 4) && (R.y + R.h > 4) && (R.x < SW - 4) && (R.y < SH - 4);
+if (!onStage) continue;
+```
+
+Konsekuensi praktis: pada gaya kolase, **tidak adanya tumpang tindih bukan bukti
+bahwa teks dimatikan** — ia bisa sekadar keluar frame. Untuk membuktikan teks
+benar-benar dimatikan, periksa `opacity`-nya langsung di detik setelah adegannya
+lewat, bukan hanya tumpang tindihnya.
 
 ---
 
@@ -112,6 +171,7 @@ tidak menemukannya sama sekali dan laporan berbunyi "TIDAK ADA" — padahal ada.
 | `scripts/snap.mjs` | potret frame di detik kunci → lembar kontak | `#1` (kalau ada PAGEERROR), komposisi |
 | `scripts/perdetik.mjs` | tumpang tindih teks + teks nyangkut + skala kamera, per detik | `#3`, `#4` |
 | `scripts/lacak.mjs` | satu elemen dilacak properti-per-properti di setiap detik | `#2` |
+| `scripts/tepi.mjs` | **teks vs tepi panggung** per detik — keluar frame, dengan margin | `#4b` |
 
 ```bash
 # 1. ukur tumpang tindih + teks nyangkut (wajib sebelum serah)

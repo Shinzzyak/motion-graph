@@ -22,6 +22,7 @@
 
    Skrip ini menjawab ketiga-tiganya dengan ANGKA:
      (a) tumpang tindih antar elemen TEKS, per detik kunci
+         (berlaku juga untuk proyek TANPA `.scene` — lihat catatan di bawah)
      (b) elemen teks yang masih terlihat padahal adegannya sudah lewat
      (c) posisi/ukuran elemen apa pun yang kamu minta lewat --watch
      (d) transform world (skala kamera) per detik
@@ -150,7 +151,18 @@ for (const t of times) {
 
     // --- (a)(b) teks yang BENAR-BENAR terlihat ---
     const vis = [];
-    const allScenes = [...document.querySelectorAll('.scene')];
+    let allScenes = [...document.querySelectorAll('.scene')];
+    /* PROYEK TANPA `.scene` SAMA SEKALI — ini yang bikin alat ini pernah
+       melaporkan "0 teks / bersih" untuk proyek yang jelas punya teks.
+       Kalau tidak ada `.scene`, seluruh dunia (#world) diperlakukan sebagai
+       SATU adegan. Akibatnya penjaga induk-anak tetap berlaku (satu pohon
+       tidak dihitung tabrakan), tapi teks yang saling menimpa tetap tertangkap.
+       Tanpa cabang ini, detector buta persis di pola yang paling sering
+       dipakai model: elemen di-tween langsung tanpa pembungkus adegan. */
+    if (!allScenes.length) {
+      const w = document.querySelector('#world') || document.querySelector('#stage') || document.body;
+      if (w) { if (!w.id) w.id = '__world__'; allScenes = [w]; }
+    }
     for (const sc of allScenes) {
       const sceneOp = parseFloat(getComputedStyle(sc).opacity);
       const sceneGone = sceneOp < 0.05;
@@ -167,6 +179,16 @@ for (const t of times) {
         if (/inset\([^)]*100%/.test(cp)) continue;
         const R = rel(el);
         if (R.w < 2 || R.h < 2) continue;
+        /* TERLIHAT = opacity cukup DAN irisannya dengan PANGGUNG nyata.
+           Di proyek "dunia besar + kamera menyusuri" (kolase), teks yang
+           tidak pernah dimatikan TIDAK menumpuk di layar — ia keluar frame
+           karena kamera pergi. Tanpa cek irisan ini, alat melaporkan "layar
+           tidak pernah kosong" untuk layar yang sebenarnya kosong, dan
+           sebaliknya menghitung teks di luar frame sebagai tumpang tindih. */
+        const SW = stage ? stage.getBoundingClientRect().width / fit : 1920;
+        const SH = stage ? stage.getBoundingClientRect().height / fit : 1080;
+        const onStage = (R.x + R.w > 4) && (R.y + R.h > 4) && (R.x < SW - 4) && (R.y < SH - 4);
+        if (!onStage) continue;
         const ownOp = parseFloat(cs.opacity);
         vis.push({ el, txt: txt.slice(0, 26), scene: sc.id || '(tanpa-id)', sceneGone,
                    ownOp: +ownOp.toFixed(2), eff: +eff.toFixed(2), ...R });

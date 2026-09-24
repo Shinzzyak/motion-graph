@@ -1,5 +1,33 @@
 # Changelog
 
+## 1.21.0 — 2026-09-25
+
+**Verifikasi TEPI + tiga cacat alat ukur sendiri**
+
+Ditemukan dari satu proyek nyata kedua (explainer sketsa vintage 48 dtk). Yang
+penting bukan bug di kode yang diukur, tapi **tiga cara alat ukurnya sendiri
+berbohong**:
+
+- `scripts/tepi.mjs` — **alat baru**. Mengukur tiap elemen teks terhadap TEPI
+  panggung per detik, dengan margin. Menemukan enam blok teks yang terpotong tepi
+  bawah 13–54 px selama 1–1,5 dtk — di **puncak animasi masuknya**, bukan di posisi
+  istirahatnya. `perdetik.mjs` tidak akan pernah menemukannya: ia membandingkan
+  teks dengan teks, bukan teks dengan tepi.
+- `scripts/perdetik.mjs` — **dua perbaikan**:
+  - proyek **tanpa `.scene`** (kamera menyusuri dunia besar) diperlakukan sebagai
+    satu adegan; sebelumnya alat melaporkan `0 teks` di semua pembacaan dan
+    "bersih" — **hijau karena buta**, bukan karena kode bersih.
+  - **"terlihat" = opacity cukup DAN irisannya dengan panggung.** Di gaya kolase,
+    teks yang tidak pernah dimatikan tidak menumpuk di layar — ia keluar frame
+    karena kameranya pergi.
+- `references/verifikasi-per-detik.md` — tiga aturan baru: #4b ukur tepi di puncak
+  animasi; #6 proyek tanpa `.scene`; #7 irisan panggung.
+- `SKILL.md` — langkah 4b memuat ketiga alat; checklist dapat butir tepi; tabel Isi
+  paket memuat `tepi.mjs`.
+
+Aturan yang paling penting: **alat yang melaporkan "bersih" karena tidak menemukan
+apa pun lebih berbahaya daripada alat yang melaporkan masalah palsu.**
+
 ## 1.20.0 — 2026-09-24
 
 **Verifikasi per detik — kelas bug yang tidak terlihat di frame**
