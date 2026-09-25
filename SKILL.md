@@ -373,8 +373,15 @@ bagian 1 dan 1b. Ringkasnya:
    node <skill>/scripts/tepi.mjs . --step 0.5          # teks vs TEPI panggung
    node <skill>/scripts/tepi.mjs . --step 0.5 --all    # + ILUSTRASI (svg/g/canvas/[id])
    node <skill>/scripts/piksel.mjs . --step 2          # TINTA menyentuh tepi (piksel)
+   node <skill>/scripts/tabrakan.mjs . --step 1        # TEKS vs tinta GAMBAR
    node <skill>/scripts/lacak.mjs . "#divider" --box   # satu elemen, properti per detik
    ```
+
+   **`tabrakan.mjs` menutup celah yang tiga alat lain tidak jaga.** `perdetik.mjs`
+   membandingkan teks dengan teks; `tepi.mjs` dan `piksel.mjs` memeriksa TEPI panggung.
+   Tidak satu pun memeriksa teks terhadap **garis gambar di bawahnya**. Diukur
+   2026-09-25: **12 teks menabrak bingkai kotak/busur/hatch** pada satu explainer, dan
+   ketiga alat lain melaporkan "bersih".
 
    **`tepi.mjs` mengukur DOM, `piksel.mjs` mengukur yang benar-benar DIGAMBAR.**
    Keduanya perlu: `tepi.mjs` tahu elemen mana yang salah, `piksel.mjs` menangkap
@@ -527,6 +534,11 @@ bagian 1 dan 1b. Ringkasnya:
 - [ ] **Sudah diukur PIKSEL** (`piksel.mjs`): nol tinta di pita tepi saat kamera
       diam. Ini pemeriksaan terakhir dan yang paling keras — ia mengukur yang
       benar-benar digambar, bukan yang dijanjikan DOM
+- [ ] **Sudah diukur TABRAKAN** (`tabrakan.mjs`): nol tinta gambar di bawah kotak
+      teks. Teks di atas bingkai/hatch/busur = "jelek" yang tidak terukur oleh
+      alat lain. Kalau teks memang harus di atas gambar, beri halo
+      (`text-shadow` tebal warna latar) — bukan pelat `::before`, itu gagal di
+      dalam elemen ber-`z-index`
 - [ ] Ada suara? Halaman menahan di frame awal bila autoplay diblokir dan mulai
       bersama suara pada gestur pertama — tidak pernah mulai tanpa suara; tanpa
       file peluncur (`.cmd`/`.bat`)
@@ -624,5 +636,6 @@ dan buat layer dari belakang ke depan. Build 10 panggung ≈ 1 jam, 0 kredit.
 | `scripts/lacak.mjs` | VERIFIKASI PER DETIK: satu elemen dilacak properti-per-properti tiap detik — menemukan `fromTo` yang menimpa `gsap.set` sebelumnya |
 | `scripts/tepi.mjs` | VERIFIKASI TEPI (DOM): tiap elemen vs tepi panggung per detik — teks, dan dengan `--all` juga ilustrasi. Membedakan keluar panggung saat kamera DIAM (kegagalan) dari saat CLOSE-UP (sah) |
 | `scripts/piksel.mjs` | VERIFIKASI PIKSEL: hitung tinta di pita tepi frame yang benar-benar digambar, per detik + skala kamera. Menangkap yang tidak terlihat di DOM — filter SVG melebar, blend mode, bayangan. Ini yang menemukan roda gigi SVG yang keluar frame setelah `tepi.mjs` melaporkan bersih |
+| `scripts/tabrakan.mjs` | VERIFIKASI TABRAKAN: teks vs **tinta gambar di bawahnya**, diukur piksel (frame dengan teks vs frame tanpa teks). Kotak glyph diambil dari `Range.selectNodeContents`, bukan `getBoundingClientRect` — beda terukur 1455×101 vs 1006×129 pada satu headline |
 | `scripts/vo-pauses.html` | deteksi jeda VO di browser (pengganti ffmpeg silencedetect, tanpa instal) |
 | `scripts/export-frames.mjs` | EXPORT: render semua frame → MP4, hanya bila diminta (opsional, butuh Node + puppeteer + ffmpeg) |
