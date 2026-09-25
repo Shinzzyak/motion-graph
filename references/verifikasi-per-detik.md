@@ -172,6 +172,8 @@ lewat, bukan hanya tumpang tindihnya.
 | `scripts/perdetik.mjs` | tumpang tindih teks + teks nyangkut + skala kamera, per detik | `#3`, `#4` |
 | `scripts/lacak.mjs` | satu elemen dilacak properti-per-properti di setiap detik | `#2` |
 | `scripts/tepi.mjs` | **teks vs tepi panggung** per detik — keluar frame, dengan margin | `#4b` |
+| `scripts/piksel.mjs` | **tinta di pita tepi** frame yang benar-benar digambar | `#5` |
+| `scripts/tabrakan.mjs` | **teks vs tinta gambar** di bawahnya | `#6` |
 
 ```bash
 # 1. ukur tumpang tindih + teks nyangkut (wajib sebelum serah)
@@ -211,6 +213,54 @@ window.OPENER.seekFrame   = (t) => …;  // kalau ada klip video
 - `?clean=1` menahan autoplay supaya `seek()` tidak dilawan ticker.
 - `--fit` (custom property di `:root`) dipakai untuk menormalkan koordinat ke
   ukuran panggung; kalau tidak ada, dianggap 1.
+
+---
+
+## Tiga kelas yang tidak dijaga `perdetik.mjs` — dan alat yang menjaganya
+
+`perdetik.mjs` membandingkan **teks dengan teks**. Itu meninggalkan tiga lubang yang
+masing-masing butuh alat sendiri. Semuanya ditemukan pada 2026-09-25, pada proyek nyata.
+
+### #5 — elemen ILUSTRASI keluar panggung saat kamera DIAM
+
+Roda gigi SVG duduk **84 px di luar tepi kanan** selama adegan terakhir. Tidak ada frame
+yang bisa membuktikannya karena **saat detik 41–42 kamera sedang close-up (z=1,9–2,0)** —
+di situ keluar frame itu **normal**. Yang salah cuma saat kamera **DIAM di z=1**.
+
+Alat: `scripts/piksel.mjs` — hitung tinta di pita tepi, per detik + skala kamera.
+Ia membedakan "keluar panggung saat kamera diam" (kegagalan) dari "saat close-up" (sah).
+Ambang `camZ > 1,05`; **1,5 bikin 17 positif palsu.**
+
+Akar yang paling sering: **`transformOrigin` pada elemen SVG** dibaca relatif bbox
+elemen, bukan ruang user SVG. Untuk `<circle cx=600 cy=400 r=60>` (bbox `540,340`),
+pivot jadi `(1140,740)` — `rotate(180)` menggeser elemen **907×571 px**. Pakai
+`svgOrigin:'600 400'`.
+
+### #6 — teks menabrak GARIS GAMBAR
+
+**12 teks** pada satu explainer menabrak bingkai kotak, hatch diagonal, dan busur. Ketiga
+alat lain melaporkan "bersih" karena tidak satu pun membandingkan teks dengan gambar.
+
+Alat: `scripts/tabrakan.mjs` — potret frame dengan teks, potret lagi dengan teks
+disembunyikan, piksel yang tetap gelap = gambar di bawah teks.
+
+Dua pelajaran saat membangunnya:
+
+- **Kotak glyph ≠ kotak elemen.** `getBoundingClientRect()` pada elemen inline melaporkan
+  kotak yang jauh lebih tinggi dari hurufnya. Beda terukur pada satu headline:
+  elemen **1455×101**, `Range.selectNodeContents` **1006×129**. Kotak elemen menghasilkan
+  positif palsu **2425 px**.
+- **Bounding box SVG tidak memberitahu di mana garisnya berakhir.** `<svg top=185
+  height=770>` bisa berarti garisnya berhenti di 400 atau di 900, tergantung viewBox dan
+  path-nya. Yang menjawab cuma pengukuran piksel.
+
+**Kalau teks memang HARUS di atas gambar** (label yang menunjuk bagian gambar): beri
+**halo** `text-shadow` tebal warna latar. Terukur bekerja: piksel gelap di area label
+**19,4 % → 17,6 %**, luminansi **187,3 → 191,4**.
+
+**Jangan pakai `::before` dengan `z-index:-1`.** Itu gagal: pseudo-element masuk stacking
+context elemen ber-`z-index:12`, dan `opacity:0` milik elemen mematikan pseudo-element-nya
+juga. Halo, bukan pelat.
 
 ---
 
