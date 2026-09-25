@@ -126,6 +126,37 @@ comm -23 /tmp/dipakai.txt /tmp/ada.txt
 Keluaran kosong = bersih. Keluaran berisi = model mengarang, dan halamannya akan
 tampak kosong tanpa error apa pun.
 
+### Gejala yang membuat model ini TIDAK LAYAK untuk kode, apa pun brief-nya
+
+Enam percobaan pada `ag/gemini-3.8-flash-high` (2026-09-25), dari brief penuh sampai
+potongan 1,5 KB — **semuanya gagal dengan pola identik**:
+
+| Percobaan | Output | Hasil |
+|---|---|---|
+| brief penuh 22.849 B | 14.244 char | terpotong di tengah boilerplate |
+| brief dipotong 5.303 B + `Do NOT think` | 16.264 char | terpotong di tengah CSS |
+| CSS saja | 8.544 char | **berhasil** |
+| HTML saja | 13.388 char | **berhasil** |
+| JS saja | 16.685 char | berhenti setelah kerangka helper |
+| JS awal saja (1,5 KB permintaan) | 38.499 char | **tidak satu pun yang diminta** |
+
+Dua gejala yang menandainya lebih awal, **sebelum** membuang waktu:
+
+1. **`[thinking: N tokens hidden by upstream]` muncul di `content`.** Itu jejak deliberasi
+   yang bocor ke keluaran. Kalau muncul sekali, model ini akan mengulanginya.
+2. **Ia menafsirkan ulang simbol yang sudah diberi arti.** Diminta `const $=(s,r)=>…`
+   (fungsi selector), ia menulis `const $ = { el: function…, on: function…, ready: …,
+   ajax: … }` — sebuah objek utility library, **empat kali berturut-turut**, dalam satu
+   jawaban. Ia juga mengarang `#problemText`/`#cta`/`#character2` yang tidak ada.
+
+**Kesimpulan yang sah:** untuk tugas kode, model ini **boros dan tidak dapat
+diandalkan** — bukan karena brief-nya kurang jelas, tapi karena deliberasinya
+menghabiskan anggaran sebelum menulis, dan saat menulis ia mengganti spesifikasi dengan
+kebiasaan dari data latihannya.
+
+**Yang tetap boleh:** potongan yang sangat mandiri dan bisa dinilai sendiri (satu blok
+CSS, satu blok markup). Di luar itu, pakai model lain.
+
 ## Yang TIDAK boleh disimpulkan
 
 - "Model X lebih pintar." Yang diukur cuma **batas output** pada tugas ini.
