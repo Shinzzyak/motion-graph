@@ -202,6 +202,46 @@ Tulis di pesan penutup, bukan disembunyikan:
 
 Kalau sesuatu gagal, tulis gagal. Jangan substitusi hasil lain diam-diam.
 
+### 2b-2. Suara: TTS + satu jebakan encode yang memotong video
+
+Diukur 2026-09-25 (explainer 48 dtk, VO Bahasa Indonesia).
+
+**TTS lewat router hampir selalu gagal.** Yang diuji dan hasilnya:
+
+| Jalur | Hasil |
+|---|---|
+| `nar/kokoro-tts`, `nar/gemini-3-1-flash-tts` via `/v1/audio/speech` | HTTP 400 — node-nya `apiType: chat`, tidak dukung route TTS |
+| langsung ke upstream (kenari.id) | **HTTP 402** `insufficient_balance` |
+| `orc` (orcarouter) `google/gemini-3.1-flash-tts-preview` | HTTP 402 — kehabisan kredit |
+| `nr` (nusarouter) `qwen/qwen-audio-3.0-tts-flash` | HTTP 403 |
+| **`edge-tts` (venv Hermes, `~/.hermes/hermes-agent/venv/bin/edge-tts`)** | **berhasil, gratis, tanpa kredit** |
+
+Suara Indonesia: `id-ID-ArdiNeural` (pria) · `id-ID-GadisNeural` (wanita).
+**Laju baca ≈ 13,3 char/detik** — untuk video 48 dtk, naskah ≈ 620 char.
+Ukur dengan `ffprobe`; jangan kira-kira. Naskah yang disesuaikan ke durasi video,
+bukan video yang diperpanjang untuk naskah.
+
+**Jebakan encode — `-shortest` memotong trek yang LEBIH PANJANG:**
+
+```bash
+# SALAH — video 48 dtk + audio 46,4 dtk = VIDEO yang terpotong
+ffmpeg -i video-silent.mp4 -i vo.mp3 -c:v copy -c:a aac -shortest out.mp4
+#   -> 46,421 dtk, 1389 frame  (kehilangan 1,6 dtk tanpa peringatan)
+
+# BENAR — pad audio ke panjang video, lalu gabung tanpa -shortest
+ffmpeg -i vo.mp3 -af apad -t 48 -c:a aac vo48.m4a
+ffmpeg -i video-silent.mp4 -i vo48.m4a -c:v copy -c:a aac out.mp4
+#   -> 48,000000 dtk, 1440 frame
+```
+
+Buktikan audionya bersuara, bukan silence:
+`ffmpeg -i out.mp4 -af volumedetect -f null /dev/null` → `mean_volume` harus jauh di
+bawah `-inf`. Terukur: `mean -17,9 dB · max -3,3 dB`.
+
+**VO di HTML:** elemen `<audio id="vo" src="vo.mp3">` + `tick()` yang menyelaraskan
+`vo.currentTime` ke `tl.time()` kalau melenceng > 0,12 dtk. Autoplay diblokir browser →
+tunggu klik pertama; **jangan pernah mulai tanpa suara**.
+
 ### 2c. Perbandingan referensi
 
 Kalau user menyodorkan video referensi:

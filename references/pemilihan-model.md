@@ -51,6 +51,35 @@ banyak yang harus ia putuskan sambil menulis.
 | **Menulis kode besar** | model dengan output panjang terbukti | butuh volume, bukan penalaran |
 | Verifikasi & perbaikan | **selalu agent sendiri** | model tidak akan menemukan bug-nya sendiri |
 
+## Diukur ulang 2026-09-25 — brief LEBIH PANJANG mengubah hasilnya
+
+Brief 22.849 char (3,6× lebih panjang dari uji 2026-09-22), system prompt identik,
+`max_tokens` 64.000:
+
+| Model | Waktu | Output | `finish` | `reasoning` | Kode bersih | Hasil |
+|---|---|---|---|---|---|---|
+| `nar/gpt-6-luna` | 186,2 dtk | 20.220 char | **`stop`** | **0** | **20.169** | **dipakai** |
+| `ag/gemini-3.8-flash-high` | 47,1 dtk | 14.244 char | `length` | **12.943 (91 %)** | 1.301 | gagal |
+
+**`ag/gemini-3.8-flash-high` yang dulu menghasilkan 28.312 char sekarang GAGAL** — karena
+brief-nya 3,6× lebih panjang, dan brief panjang memicu deliberasi. Isi keluarannya:
+
+> *"The user's direct request for code-only output conflicts with the established framing
+> contract. The framing contract takes precedence."*
+
+Lalu ia menulis **empat** `<!doctype html>` (tiga contoh palsu di dalam penalarannya),
+dan `[thinking: 15.727 tokens hidden by upstream]` di akhir.
+
+**Tiga percobaan, tiga kegagalan pola sama:** brief penuh · brief dipotong 5.303 char +
+`Do NOT think, plan, explain` · **dipecah minta CSS saja → BERHASIL (8.361 char CSS utuh)**.
+
+**Aturan:** batas model ini adalah **volume per tarikan**, bukan kemampuan. Kalau gagal
+pada tugas besar, **pecah tugasnya** — minta satu bagian (CSS / HTML / JS) per panggilan,
+lalu sambung. Percobaan ketiga membuktikan ia bisa menulis bagiannya dengan baik.
+
+**Cara mengenali lebih awal:** `finish_reason: length` dengan `reasoning_chars` besar.
+Selalu cetak KEDUANYA.
+
 ## Yang TIDAK boleh disimpulkan
 
 - "Model X lebih pintar." Yang diukur cuma **batas output** pada tugas ini.
