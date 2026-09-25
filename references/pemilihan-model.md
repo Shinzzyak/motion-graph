@@ -80,6 +80,52 @@ lalu sambung. Percobaan ketiga membuktikan ia bisa menulis bagiannya dengan baik
 **Cara mengenali lebih awal:** `finish_reason: length` dengan `reasoning_chars` besar.
 Selalu cetak KEDUANYA.
 
+### Memecah tugas: membantu sampai batas tertentu, lalu berhenti
+
+Tiga bagian, tiga hasil:
+
+| Bagian | Hasil |
+|---|---|
+| CSS saja | **berhasil** — 8.361 char, semua kelas yang diminta ada |
+| Markup HTML saja | **berhasil** — 7.010 char, semua id yang diminta ada |
+| Blok `<script>` saja | **gagal** — berhenti setelah kerangka helper, 15.097 token reasoning |
+
+**Kenapa JS gagal sementara CSS dan HTML berhasil:** CSS dan HTML adalah bagian yang
+bisa dinilai sendiri-sendiri. JS harus **merujuk DOM yang ditulis bagian lain** — dan di
+situ model mulai mengarang.
+
+### Kelas bug yang tidak terlihat di browser: elemen halusinasi
+
+Pada percobaan JS, gemini menulis timeline untuk **8 id yang tidak pernah ada** di brief
+maupun di markup yang ia sendiri baru tulis:
+
+```
+#problemText  #problemGraphic  #solutionGraphic  #solutionText
+#character2   #speechBubble2   #cta              #ctaButton
+```
+
+Dan **0 dari 8 id yang benar** (`#clockCase`, `#escapement`, `#springPlate`,
+`#fullClock`, `#line1`, `#nameA1`, …). Ia mengarang kerangka explainer generik:
+problem → solution → character demo → CTA.
+
+**Kenapa ini berbahaya:** halaman akan `ready`, timeline terbangun, **nol error di
+console**. GSAP diam kalau targetnya tidak ada — tidak ada error, tidak ada peringatan.
+Yang terlihat cuma **layar kosong**, dan penyebabnya tidak kelihatan dari kode.
+
+**Pemeriksaan yang menangkapnya — murah dan wajib:**
+
+```bash
+# id yang DIPAKAI di JS
+grep -oE "['\"]#[A-Za-z][A-Za-z0-9_-]*" index.html | sort -u > /tmp/dipakai.txt
+# id yang ADA di markup
+grep -oE 'id="[A-Za-z][A-Za-z0-9_-]*"' index.html | sed 's/id="/#/;s/"//' | sort -u > /tmp/ada.txt
+# yang dipakai tapi tidak ada
+comm -23 /tmp/dipakai.txt /tmp/ada.txt
+```
+
+Keluaran kosong = bersih. Keluaran berisi = model mengarang, dan halamannya akan
+tampak kosong tanpa error apa pun.
+
 ## Yang TIDAK boleh disimpulkan
 
 - "Model X lebih pintar." Yang diukur cuma **batas output** pada tugas ini.
