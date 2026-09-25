@@ -5,14 +5,14 @@ license: MIT
 metadata:
   author: Bang Tutorial
   author_url: https://youtube.com/bangtutorial
-  version: "1.21.0"
+  version: "1.22.0"
   updated: "2026-09-25"
   homepage: https://github.com/bangtutorial/bang-motion
 ---
 
 # Bang Motion — motion graphic web yang bukan PPT
 
-**v1.21.0 · by [Bang Tutorial](https://youtube.com/bangtutorial) · MIT.** Riwayat perubahan di `CHANGELOG.md`;
+**v1.22.0 · by [Bang Tutorial](https://youtube.com/bangtutorial) · MIT.** Riwayat perubahan di `CHANGELOG.md`;
 cara pasang di `README.md`.
 
 Skill ini untuk AI coding agent apa pun (format Agent Skills terbuka).

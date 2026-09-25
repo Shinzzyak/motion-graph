@@ -1,5 +1,38 @@
 # Changelog
 
+## 1.22.0 — 2026-09-25
+
+**Verifikasi TABRAKAN — teks vs gambar, alat keempat**
+
+Lahir dari satu kalimat pemilik: *"Kok hasilnya jelek ya."* Yang ditemukan bukan soal
+selera — **12 teks menabrak garis gambar**, dan **ketiga alat yang sudah ada melaporkan
+"bersih"**.
+
+- `scripts/tabrakan.mjs` — **ALAT BARU.** Mengukur tinta gambar di bawah kotak teks:
+  potret frame dengan teks, potret lagi dengan teks disembunyikan, piksel yang tetap
+  gelap = gambar di bawah teks. Kotak glyph diambil dari `Range.selectNodeContents`,
+  **bukan** `getBoundingClientRect` — beda terukur **1455×101 vs 1006×129** pada satu
+  headline, dan kotak elemen menghasilkan positif palsu 2425 px.
+- **Kenapa tiga alat lain buta:** `perdetik.mjs` membandingkan teks dengan **teks**;
+  `tepi.mjs` dan `piksel.mjs` memeriksa **tepi panggung**. Tidak satu pun membandingkan
+  teks dengan **garis gambar di bawahnya**.
+- **Temuan pada satu explainer 48 dtk:** `l4` 1777 px · `l1` 1606 · `l5` 1140 · `l2` 689
+  · `h3` 534 · `l6` 501 · `h6` 464 · `h4` 342 · `h1` 255 · `l3` 218 · `h2` 168 · `n6` 69.
+  Semua **diverifikasi dengan mata** (crop area, sembunyikan teks, lihat).
+- **Akar:** gambar SVG diletakkan dengan `top` tinggi dan teks diletakkan di bawahnya
+  tanpa memeriksa di mana **garisnya** benar-benar berakhir. `springs4` top 185 dengan
+  bingkai bawah di layar **847**; `l4` di top **825** → tumpang tindih 22 px.
+- **Perbaikan:** teks digeser keluar bingkai; untuk label yang **memang** di atas gambar,
+  dipakai **halo** `text-shadow` tebal warna latar. Terukur bekerja: piksel gelap di area
+  label **19,4 % → 17,6 %**, luminansi **187,3 → 191,4**.
+- **Jebakan:** `::before` dengan `background:var(--paper)` dan `z-index:-1` **GAGAL** —
+  masuk stacking context elemen ber-`z-index:12`, dan `opacity:0` elemen mematikan
+  pseudo-element-nya. Yang bekerja `text-shadow`.
+- `SKILL.md` — alat keempat di langkah 4b; tabel Isi paket; checklist butir tabrakan.
+
+Aturan yang paling penting: **"kok jelek" dari pemilik adalah sinyal untuk MENGUKUR,
+bukan menebak** — yang ketemu bukan selera, tapi 12 tabrakan terukur.
+
 ## 1.21.0 — 2026-09-25
 
 **Verifikasi TEPI + tiga cacat alat ukur sendiri**
